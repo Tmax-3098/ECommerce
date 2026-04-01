@@ -18,6 +18,11 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    @GetMapping("/status")
+    public String status(){
+        return "order service running";
+    }
+
     @GetMapping
     public ResponseEntity<List<OrderRequestDto>> getAllOrders() {
         return ResponseEntity.ok(orderService.getAllOrders());
