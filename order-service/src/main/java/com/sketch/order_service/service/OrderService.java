@@ -1,6 +1,9 @@
 package com.sketch.order_service.service;
 
+import com.sketch.order_service.clients.InventoryFeignClient;
 import com.sketch.order_service.dto.OrderRequestDto;
+import com.sketch.order_service.entity.OrderItem;
+import com.sketch.order_service.entity.OrderStatus;
 import com.sketch.order_service.entity.Orders;
 import com.sketch.order_service.repositories.OrderRepo;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,7 @@ public class OrderService {
 
     private final OrderRepo orderRepo;
     private final ModelMapper mapper;
+    private final InventoryFeignClient inventoryFeignClient;
 
     public List<OrderRequestDto> getAllOrders(){
         log.info("Getting all orders");
@@ -32,5 +36,17 @@ public class OrderService {
         Orders order = orderRepo.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
         return mapper.map(order, OrderRequestDto.class);
 
+    }
+
+    public OrderRequestDto createOrder(OrderRequestDto orderRequestDto) {
+        Double total_Price = inventoryFeignClient.reduceStock(orderRequestDto);
+        Orders order = mapper.map(orderRequestDto, Orders.class);
+        for(OrderItem orderItem: order.getItems()){
+            orderItem.setOrder(order);
+        }
+        order.setTotalPrice(total_Price);
+        order.setOrderStatus(OrderStatus.CONFIRMED);
+        Orders savedOrder = orderRepo.save(order);
+        return mapper.map(savedOrder, OrderRequestDto.class);
     }
 }

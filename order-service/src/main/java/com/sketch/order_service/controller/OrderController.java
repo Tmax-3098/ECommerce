@@ -1,13 +1,11 @@
 package com.sketch.order_service.controller;
 
+import com.sketch.order_service.clients.InventoryFeignClient;
 import com.sketch.order_service.dto.OrderRequestDto;
 import com.sketch.order_service.service.OrderService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -31,6 +29,12 @@ public class OrderController {
     @GetMapping("/{id}")
     public ResponseEntity<OrderRequestDto> getOrder(@PathVariable Long id) {
         return  ResponseEntity.ok(orderService.getOrderById(id));
+    }
+
+    @PostMapping("/create-order")
+    public ResponseEntity<OrderRequestDto> createOrder(@RequestBody OrderRequestDto orderRequestDto) {
+        OrderRequestDto createdOrder = orderService.createOrder(orderRequestDto);
+        return ResponseEntity.ok(createdOrder);
     }
 
 
