@@ -6,6 +6,9 @@ import com.sketch.order_service.entity.OrderItem;
 import com.sketch.order_service.entity.OrderStatus;
 import com.sketch.order_service.entity.Orders;
 import com.sketch.order_service.repositories.OrderRepo;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -38,7 +41,11 @@ public class OrderService {
 
     }
 
+   // @Retry(name="inventoryRetry", fallbackMethod = "createOrderFallback")
+    @CircuitBreaker(name="inventoryCircuitBreaker", fallbackMethod = "createOrderFallback")
+    //@RateLimiter(name="inventoryRateLimiter", fallbackMethod = "createOrderFallback")
     public OrderRequestDto createOrder(OrderRequestDto orderRequestDto) {
+        log.info("Creating order");
         Double total_Price = inventoryFeignClient.reduceStock(orderRequestDto);
         Orders order = mapper.map(orderRequestDto, Orders.class);
         for(OrderItem orderItem: order.getItems()){
@@ -49,4 +56,10 @@ public class OrderService {
         Orders savedOrder = orderRepo.save(order);
         return mapper.map(savedOrder, OrderRequestDto.class);
     }
+
+    public OrderRequestDto createOrderFallback(OrderRequestDto orderRequestDto, Throwable throwable) {
+        log.error("Falling due to : {}", throwable.getMessage());
+        return new OrderRequestDto();
+    }
+
 }

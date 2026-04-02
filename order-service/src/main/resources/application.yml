@@ -1,0 +1,35 @@
+management:
+  health:
+    circuitbreakers:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      show-details: ALWAYS
+
+resilience4j:
+  retry:
+    instances:
+      inventoryRetry:
+        max-attempts: 3
+        wait-duration: 2s
+  ratelimiter:
+    instances:
+      inventoryRateLimiter:
+        limit-for-period: 1
+        limit-refresh-period: 5s
+        timeout-duration: 1s
+  circuitbreaker:
+    instances:
+      inventoryCircuitBreaker:
+        register-health-indicator: true
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 10000
+        permitted-number-of-calls-in-half-open-state: 5
+        sliding-window-type: COUNT_BASED
+        minimum-number-of-calls: 5
+        automatic-transition-from-open-to-half-open-enabled: true
